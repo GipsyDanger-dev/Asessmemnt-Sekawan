@@ -7,6 +7,27 @@ use DomainException;
 
 class BookingController extends BaseController
 {
+    public function update(int $id)
+    {
+        $rules = [
+            'requester_name' => 'required|max_length[150]', 'requester_nik' => 'required|max_length[50]',
+            'department' => 'required|max_length[150]', 'region_id' => 'required|is_natural_no_zero',
+            'vehicle_id' => 'required|is_natural_no_zero', 'driver_id' => 'required|is_natural_no_zero',
+            'purpose' => 'required', 'destination' => 'required|max_length[255]', 'start_at' => 'required', 'end_at' => 'required',
+            'passenger_count' => 'required|is_natural_no_zero', 'requested_vehicle_category' => 'required|in_list[PASSENGER,CARGO]',
+            'approver_level_1_id' => 'required|is_natural_no_zero', 'approver_level_2_id' => 'required|is_natural_no_zero', 'notes' => 'permit_empty',
+        ];
+        if (! $this->validateData($this->request->getJSON(true) ?? [], $rules)) {
+            return $this->response->setStatusCode(422)->setJSON(['message' => 'Validation failed.', 'errors' => $this->validator->getErrors()]);
+        }
+        try {
+            $user = service('jwtService')->authenticatedUser();
+            return $this->response->setJSON(['data' => service('bookingWorkflow')->update($id, $this->validator->getValidated(), (int) $user['sub'], $this->request->getIPAddress())]);
+        } catch (DomainException $exception) {
+            return $this->response->setStatusCode(422)->setJSON(['message' => $exception->getMessage()]);
+        }
+    }
+
     public function delete(int $id)
     {
         $model = new \App\Models\BookingModel();

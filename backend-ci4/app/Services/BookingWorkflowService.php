@@ -95,6 +95,51 @@ class BookingWorkflowService
         return $bookingModel->find($bookingId);
     }
 
+    public function update(int $bookingId, array $input, int $adminId, ?string $ipAddress = null): array
+    {
+        $bookingModel = new BookingModel();
+        $existing = $bookingModel->find($bookingId);
+        if ($existing === null) {
+            throw new DomainException('Booking not found.');
+        }
+        if (! in_array($existing['status'], ['DRAFT', 'PENDING_LEVEL_1', 'PENDING_LEVEL_2'], true)) {
+            throw new DomainException('Only pending bookings can be updated.');
+        }
+
+        $this->assertSchedule($input['start_at'], $input['end_at']);
+        $vehicle = (new VehicleModel())->find($input['vehicle_id']);
+        $driver = (new DriverModel())->find($input['driver_id']);
+        if ($vehicle === null || $vehicle['operational_status'] !== 'AVAILABLE' || $vehicle['category'] !== $input['requested_vehicle_category']) {
+            throw new DomainException('Selected vehicle is unavailable or does not match the requested category.');
+        }
+        if ($driver === null || ! $driver['is_active'] || $driver['license_expires_at'] < date('Y-m-d')) {
+            throw new DomainException('Selected driver is not active or has an expired license.');
+        }
+        if ($this->hasConflict($bookingModel, 'vehicle_id', (int) $vehicle['id'], $input['start_at'], $input['end_at'], $bookingId)
+            || $this->hasConflict($bookingModel, 'driver_id', (int) $driver['id'], $input['start_at'], $input['end_at'], $bookingId)) {
+            throw new DomainException('Vehicle or driver already has an overlapping booking.');
+        }
+        $levelOne = $this->approver((int) $input['approver_level_1_id'], 1);
+        $levelTwo = $this->approver((int) $input['approver_level_2_id'], 2);
+        if ($levelOne['id'] === $levelTwo['id']) {
+            throw new DomainException('Level 1 and Level 2 approvers must be different users.');
+        }
+
+        $db = db_connect();
+        $db->transStart();
+        $bookingModel->update($bookingId, [...$input, 'status' => 'PENDING_LEVEL_1']);
+        $approvalModel = new BookingApprovalModel();
+        $approvalModel->where('booking_id', $bookingId)->delete();
+        $approvalModel->insert(['booking_id' => $bookingId, 'approver_id' => $levelOne['id'], 'approval_level' => 1]);
+        $approvalModel->insert(['booking_id' => $bookingId, 'approver_id' => $levelTwo['id'], 'approval_level' => 2]);
+        $db->transComplete();
+        if (! $db->transStatus()) {
+            throw new DomainException('Booking could not be updated.');
+        }
+        service('activityLog')->record($adminId, 'BOOKING_UPDATED', 'booking', $bookingId, "Updated booking {$existing['booking_number']} and restarted approval.", $ipAddress);
+        return $bookingModel->find($bookingId);
+    }
+
     public function complete(int $bookingId, int $adminId, ?string $ipAddress = null): array
     {
         $bookingModel = new BookingModel();
@@ -113,11 +158,15 @@ class BookingWorkflowService
         return $bookingModel->find($bookingId);
     }
 
-    private function hasConflict(BookingModel $model, string $column, int $resourceId, string $startAt, string $endAt): bool
+    private function hasConflict(BookingModel $model, string $column, int $resourceId, string $startAt, string $endAt, ?int $excludeBookingId = null): bool
     {
-        return $model->where($column, $resourceId)
+        $query = $model->where($column, $resourceId)
             ->whereIn('status', ['PENDING_LEVEL_1', 'PENDING_LEVEL_2', 'APPROVED'])
-            ->where('start_at <', $endAt)->where('end_at >', $startAt)->countAllResults() > 0;
+            ->where('start_at <', $endAt)->where('end_at >', $startAt);
+        if ($excludeBookingId !== null) {
+            $query->where('id !=', $excludeBookingId);
+        }
+        return $query->countAllResults() > 0;
     }
 
     private function approver(int $id, int $level): array
