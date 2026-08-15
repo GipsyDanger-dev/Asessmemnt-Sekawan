@@ -7,6 +7,27 @@ use DomainException;
 
 class BookingController extends BaseController
 {
+    public function show(int $id)
+    {
+        $user = service('jwtService')->authenticatedUser();
+        $booking = (new \App\Models\BookingModel())
+            ->select('vehicle_bookings.*, vehicles.license_plate, vehicles.vehicle_type, drivers.name AS driver_name, regions.name AS region_name')
+            ->join('vehicles', 'vehicles.id = vehicle_bookings.vehicle_id')
+            ->join('drivers', 'drivers.id = vehicle_bookings.driver_id')
+            ->join('regions', 'regions.id = vehicle_bookings.region_id')->find($id);
+        if ($booking === null) return $this->response->setStatusCode(404)->setJSON(['message' => 'Booking not found.']);
+        if ($user['role'] === 'approver' && ! (new \App\Models\BookingApprovalModel())->where(['booking_id' => $id, 'approver_id' => $user['sub']])->first()) return $this->response->setStatusCode(403)->setJSON(['message' => 'Forbidden.']);
+        return $this->response->setJSON(['data' => $booking]);
+    }
+
+    public function approvalHistory(int $id)
+    {
+        $user = service('jwtService')->authenticatedUser();
+        if ($user['role'] === 'approver' && ! (new \App\Models\BookingApprovalModel())->where(['booking_id' => $id, 'approver_id' => $user['sub']])->first()) return $this->response->setStatusCode(403)->setJSON(['message' => 'Forbidden.']);
+        $history = (new \App\Models\BookingApprovalModel())->select('booking_approvals.*, users.name AS approver_name, users.email AS approver_email')->join('users', 'users.id = booking_approvals.approver_id')->where('booking_id', $id)->orderBy('approval_level')->findAll();
+        return $this->response->setJSON(['data' => $history]);
+    }
+
     public function index()
     {
         $perPage = min(max((int) ($this->request->getGet('per_page') ?? 10), 1), 100);
