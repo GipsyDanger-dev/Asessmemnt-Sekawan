@@ -9,7 +9,7 @@ function LoginPage() {
   const [email, setEmail] = useState('admin@vehicle.test'); const [password, setPassword] = useState('Password123!')
   const [error, setError] = useState(''); const [loading, setLoading] = useState(false)
   if (user) return <Navigate to="/dashboard" replace />
-  async function submit(event: FormEvent) { event.preventDefault(); setLoading(true); setError(''); try { await login(email, password); navigate('/dashboard') } catch { setError('Email atau password tidak valid.') } finally { setLoading(false) } }
+  async function submit(event: FormEvent) { event.preventDefault(); setLoading(true); setError(''); try { await login(email, password); navigate('/dashboard') } catch (error) { setError(error instanceof Error ? error.message : 'Email atau password tidak valid.') } finally { setLoading(false) } }
   return <main className="login-shell"><section className="login-card"><p className="eyebrow">VEHICLE OPERATIONS</p><h1>Booking kendaraan, tanpa bentrok jadwal.</h1><p className="muted">Masuk untuk mengelola kendaraan, driver, dan approval perjalanan operasional.</p><form onSubmit={submit}><label>Email<input value={email} onChange={(e) => setEmail(e.target.value)} type="email" required /></label><label>Password<input value={password} onChange={(e) => setPassword(e.target.value)} type="password" required /></label>{error && <p className="error">{error}</p>}<button disabled={loading}>{loading ? 'Memproses...' : 'Masuk ke aplikasi'}</button></form><p className="hint">Demo: admin@vehicle.test / Password123!</p></section></main>
 }
 

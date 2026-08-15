@@ -1,4 +1,5 @@
 import { createContext, useContext, useMemo, useState, type ReactNode } from 'react'
+import axios from 'axios'
 import { api, type SessionUser } from '../../lib/api'
 
 type AuthContextValue = {
@@ -19,10 +20,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value = useMemo<AuthContextValue>(() => ({
     user,
     async login(email, password) {
-      const { data } = await api.post<{ token: string; user: SessionUser }>('/auth/login', { email, password })
-      localStorage.setItem('vehicle_booking_token', data.token)
-      localStorage.setItem(storageKey, JSON.stringify(data.user))
-      setUser(data.user)
+      try {
+        const { data } = await api.post<{ token: string; user: SessionUser }>('/auth/login', { email, password })
+        localStorage.setItem('vehicle_booking_token', data.token)
+        localStorage.setItem(storageKey, JSON.stringify(data.user))
+        setUser(data.user)
+      } catch (error) {
+        if (axios.isAxiosError(error) && error.response?.status === 401) throw error
+        throw new Error('Tidak dapat terhubung ke API. Pastikan backend lokal aktif.')
+      }
     },
     logout() {
       localStorage.removeItem('vehicle_booking_token')
