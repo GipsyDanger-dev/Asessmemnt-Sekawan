@@ -19,5 +19,7 @@ frontend-react/.vite/
 .idea/
 .vscode/
 *.log
+!frontend-react/src/features/logs/
+!frontend-react/src/features/logs/*.tsx
 .DS_Store
 Thumbs.db
