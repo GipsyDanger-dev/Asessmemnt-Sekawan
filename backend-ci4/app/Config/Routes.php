@@ -12,6 +12,7 @@ $routes->group('api', ['namespace' => 'App\Controllers\Api', 'filter' => 'cors']
     $routes->get('auth/me', 'AuthController::me', ['filter' => 'jwt']);
 
     $routes->post('bookings', 'BookingController::create', ['filter' => ['jwt', 'role:admin']]);
+    $routes->get('bookings', 'BookingController::index', ['filter' => ['jwt', 'role:admin']]);
     $routes->post('bookings/(:num)/approve', 'BookingController::approve/$1', ['filter' => ['jwt', 'role:approver']]);
     $routes->post('bookings/(:num)/reject', 'BookingController::reject/$1', ['filter' => ['jwt', 'role:approver']]);
     $routes->post('bookings/(:num)/complete', 'BookingController::complete/$1', ['filter' => ['jwt', 'role:admin']]);

@@ -7,6 +7,28 @@ use DomainException;
 
 class BookingController extends BaseController
 {
+    public function index()
+    {
+        $perPage = min(max((int) ($this->request->getGet('per_page') ?? 10), 1), 100);
+        $model = (new \App\Models\BookingModel())
+            ->select('vehicle_bookings.*, vehicles.license_plate, vehicles.vehicle_type, drivers.name AS driver_name, regions.name AS region_name')
+            ->join('vehicles', 'vehicles.id = vehicle_bookings.vehicle_id')
+            ->join('drivers', 'drivers.id = vehicle_bookings.driver_id')
+            ->join('regions', 'regions.id = vehicle_bookings.region_id');
+
+        if ($status = $this->request->getGet('status')) {
+            $model->where('vehicle_bookings.status', $status);
+        }
+        if ($search = trim((string) $this->request->getGet('search'))) {
+            $model->groupStart()->like('vehicle_bookings.booking_number', $search)->orLike('vehicle_bookings.requester_name', $search)->orLike('vehicles.license_plate', $search)->groupEnd();
+        }
+
+        return $this->response->setJSON([
+            'data' => $model->orderBy('vehicle_bookings.created_at', 'DESC')->paginate($perPage),
+            'meta' => ['page' => $model->pager->getCurrentPage(), 'per_page' => $perPage, 'total' => $model->pager->getTotal()],
+        ]);
+    }
+
     public function create()
     {
         $rules = [
