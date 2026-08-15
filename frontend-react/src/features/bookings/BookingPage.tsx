@@ -1,6 +1,6 @@
 import { type FormEvent, useEffect, useMemo, useRef, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Navigate } from 'react-router-dom'
+import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { api } from '../../lib/api'
 import { useAuth } from '../auth/AuthContext'
 
@@ -12,7 +12,9 @@ const initial = { requester_name: '', requester_nik: '', department: '', region_
 
 export function BookingPage() {
   const { user } = useAuth(); const client = useQueryClient()
+  const location = useLocation(); const navigate = useNavigate()
   const [showForm, setShowForm] = useState(false); const [form, setForm] = useState(initial); const [editingId, setEditingId] = useState<number | null>(null); const [selected, setSelected] = useState<number | null>(null); const [error, setError] = useState(''); const [search, setSearch] = useState(''); const [status, setStatus] = useState(''); const [page, setPage] = useState(1)
+  useEffect(() => { if ((location.state as { openForm?: boolean } | null)?.openForm) { setShowForm(true); navigate(location.pathname, { replace: true, state: null }) } }, [location, navigate])
   const params = useMemo(() => ({ search, status, page, per_page: 10 }), [search, status, page])
   const bookings = useQuery({ queryKey: ['bookings', params], queryFn: async () => (await api.get<PageResult>('/bookings', { params })).data })
   const details = useQuery({ queryKey: ['booking-detail', selected], enabled: selected !== null, queryFn: async () => (await api.get<{ data: Booking }>(`/bookings/${selected}`)).data.data })
