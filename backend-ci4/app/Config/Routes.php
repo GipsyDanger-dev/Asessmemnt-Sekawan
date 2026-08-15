@@ -17,6 +17,12 @@ $routes->group('api', ['namespace' => 'App\Controllers\Api', 'filter' => 'cors']
     $routes->post('bookings/(:num)/reject', 'BookingController::reject/$1', ['filter' => ['jwt', 'role:approver']]);
     $routes->post('bookings/(:num)/complete', 'BookingController::complete/$1', ['filter' => ['jwt', 'role:admin']]);
     $routes->get('approvals/inbox', 'ApprovalController::inbox', ['filter' => ['jwt', 'role:approver']]);
+    $routes->get('dashboard/summary', 'DashboardController::summary', ['filter' => ['jwt', 'role:admin']]);
+    $routes->get('dashboard/booking-trend', 'DashboardController::bookingTrend', ['filter' => ['jwt', 'role:admin']]);
+    $routes->get('dashboard/vehicle-usage', 'DashboardController::vehicleUsage', ['filter' => ['jwt', 'role:admin']]);
+    $routes->get('reports/bookings', 'ReportController::bookings', ['filter' => ['jwt', 'role:admin']]);
+    $routes->get('reports/bookings/export', 'ReportController::export', ['filter' => ['jwt', 'role:admin']]);
+    $routes->get('activity-logs', 'ActivityLogController::index', ['filter' => ['jwt', 'role:admin']]);
 
     $routes->get('regions', 'MasterDataController::regions', ['filter' => ['jwt', 'role:admin']]);
     $routes->get('vehicles', 'MasterDataController::vehicles', ['filter' => ['jwt', 'role:admin']]);
