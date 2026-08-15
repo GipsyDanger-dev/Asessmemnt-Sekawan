@@ -27,6 +27,12 @@ $routes->group('api', ['namespace' => 'App\Controllers\Api', 'filter' => 'cors']
     $routes->get('reports/bookings', 'ReportController::bookings', ['filter' => ['jwt', 'role:admin']]);
     $routes->get('reports/bookings/export', 'ReportController::export', ['filter' => ['jwt', 'role:admin']]);
     $routes->get('activity-logs', 'ActivityLogController::index', ['filter' => ['jwt', 'role:admin']]);
+    $routes->get('fleet/usage', 'FleetMonitoringController::usageIndex', ['filter' => ['jwt', 'role:admin']]);
+    $routes->get('fleet/fuel-logs', 'FleetMonitoringController::fuelIndex', ['filter' => ['jwt', 'role:admin']]);
+    $routes->post('fleet/fuel-logs', 'FleetMonitoringController::createFuel', ['filter' => ['jwt', 'role:admin']]);
+    $routes->get('fleet/services', 'FleetMonitoringController::serviceIndex', ['filter' => ['jwt', 'role:admin']]);
+    $routes->post('fleet/services', 'FleetMonitoringController::createService', ['filter' => ['jwt', 'role:admin']]);
+    $routes->post('fleet/services/(:num)/complete', 'FleetMonitoringController::completeService/$1', ['filter' => ['jwt', 'role:admin']]);
     foreach (['vehicles', 'drivers', 'regions', 'users'] as $resource) {
         $routes->post($resource, 'AdminMasterController::create/'.$resource, ['filter' => ['jwt', 'role:admin']]);
         $routes->put($resource.'/(:num)', 'AdminMasterController::update/'.$resource.'/$1', ['filter' => ['jwt', 'role:admin']]);
