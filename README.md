@@ -35,3 +35,21 @@ npm run dev
 ```
 
 Detail fitur dan alur bisnis tersedia pada [PRD.md](PRD.md).
+
+## Akun Demo
+
+| Role | Email | Password |
+|---|---|---|
+| Admin Pool | `admin@vehicle.test` | `Password123!` |
+| Approver Level 1 | `manager@vehicle.test` | `Password123!` |
+| Approver Level 2 | `director@vehicle.test` | `Password123!` |
+
+## Database dan Seeder
+
+```powershell
+cd backend-ci4
+php spark migrate --all
+php spark db:seed BookingDemoSeeder
+```
+
+Dokumen deliverable: [PDM](docs/PDM.md) dan [activity diagram](docs/activity-diagram.md).
