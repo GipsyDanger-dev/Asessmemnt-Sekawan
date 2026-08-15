@@ -3,6 +3,8 @@
 namespace Config;
 
 use App\Services\JwtService;
+use App\Services\ActivityLogService;
+use App\Services\BookingWorkflowService;
 use CodeIgniter\Config\BaseService;
 
 /**
@@ -20,6 +22,16 @@ use CodeIgniter\Config\BaseService;
  */
 class Services extends BaseService
 {
+    public static function activityLog(bool $getShared = true): ActivityLogService
+    {
+        return $getShared ? static::getSharedInstance('activityLog') : new ActivityLogService();
+    }
+
+    public static function bookingWorkflow(bool $getShared = true): BookingWorkflowService
+    {
+        return $getShared ? static::getSharedInstance('bookingWorkflow') : new BookingWorkflowService();
+    }
+
     public static function jwtService(bool $getShared = true): JwtService
     {
         if ($getShared) {
