@@ -27,6 +27,11 @@ $routes->group('api', ['namespace' => 'App\Controllers\Api', 'filter' => 'cors']
     $routes->get('reports/bookings', 'ReportController::bookings', ['filter' => ['jwt', 'role:admin']]);
     $routes->get('reports/bookings/export', 'ReportController::export', ['filter' => ['jwt', 'role:admin']]);
     $routes->get('activity-logs', 'ActivityLogController::index', ['filter' => ['jwt', 'role:admin']]);
+    foreach (['vehicles', 'drivers', 'regions', 'users'] as $resource) {
+        $routes->post($resource, 'AdminMasterController::create/'.$resource, ['filter' => ['jwt', 'role:admin']]);
+        $routes->put($resource.'/(:num)', 'AdminMasterController::update/'.$resource.'/$1', ['filter' => ['jwt', 'role:admin']]);
+        $routes->delete($resource.'/(:num)', 'AdminMasterController::delete/'.$resource.'/$1', ['filter' => ['jwt', 'role:admin']]);
+    }
     $routes->get('admin/(:segment)', 'AdminMasterController::index/$1', ['filter' => ['jwt', 'role:admin']]);
     $routes->post('admin/(:segment)', 'AdminMasterController::create/$1', ['filter' => ['jwt', 'role:admin']]);
     $routes->put('admin/(:segment)/(:num)', 'AdminMasterController::update/$1/$2', ['filter' => ['jwt', 'role:admin']]);
