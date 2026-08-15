@@ -2,6 +2,7 @@
 
 namespace Config;
 
+use App\Services\JwtService;
 use CodeIgniter\Config\BaseService;
 
 /**
@@ -19,6 +20,15 @@ use CodeIgniter\Config\BaseService;
  */
 class Services extends BaseService
 {
+    public static function jwtService(bool $getShared = true): JwtService
+    {
+        if ($getShared) {
+            return static::getSharedInstance('jwtService');
+        }
+
+        return new JwtService();
+    }
+
     /*
      * public static function example($getShared = true)
      * {
