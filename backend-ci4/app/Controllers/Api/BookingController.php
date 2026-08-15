@@ -7,6 +7,18 @@ use DomainException;
 
 class BookingController extends BaseController
 {
+    public function delete(int $id)
+    {
+        $model = new \App\Models\BookingModel();
+        $booking = $model->find($id);
+        if ($booking === null) return $this->response->setStatusCode(404)->setJSON(['message' => 'Booking not found.']);
+        if (! in_array($booking['status'], ['DRAFT', 'PENDING_LEVEL_1', 'PENDING_LEVEL_2'], true)) return $this->response->setStatusCode(422)->setJSON(['message' => 'Only pending bookings can be cancelled.']);
+        $model->delete($id);
+        $user = service('jwtService')->authenticatedUser();
+        service('activityLog')->record((int) $user['sub'], 'BOOKING_CANCELLED', 'booking', $id, "Cancelled booking {$booking['booking_number']}.", $this->request->getIPAddress());
+        return $this->response->setJSON(['message' => 'Booking cancelled.']);
+    }
+
     public function show(int $id)
     {
         $user = service('jwtService')->authenticatedUser();

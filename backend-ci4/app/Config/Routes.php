@@ -18,6 +18,7 @@ $routes->group('api', ['namespace' => 'App\Controllers\Api', 'filter' => 'cors']
     $routes->post('bookings/(:num)/approve', 'BookingController::approve/$1', ['filter' => ['jwt', 'role:approver']]);
     $routes->post('bookings/(:num)/reject', 'BookingController::reject/$1', ['filter' => ['jwt', 'role:approver']]);
     $routes->post('bookings/(:num)/complete', 'BookingController::complete/$1', ['filter' => ['jwt', 'role:admin']]);
+    $routes->delete('bookings/(:num)', 'BookingController::delete/$1', ['filter' => ['jwt', 'role:admin']]);
     $routes->get('approvals/inbox', 'ApprovalController::inbox', ['filter' => ['jwt', 'role:approver']]);
     $routes->get('dashboard/summary', 'DashboardController::summary', ['filter' => ['jwt', 'role:admin']]);
     $routes->get('dashboard/booking-trend', 'DashboardController::bookingTrend', ['filter' => ['jwt', 'role:admin']]);
