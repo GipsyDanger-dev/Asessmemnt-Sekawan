@@ -10,7 +10,12 @@ class ReportController extends BaseController
 {
     public function bookings()
     {
-        return $this->response->setJSON(['data' => $this->query()->orderBy('vehicle_bookings.start_at', 'DESC')->findAll()]);
+        $perPage = min(max((int) ($this->request->getGet('per_page') ?? 10), 1), 100);
+        $model = $this->query()->orderBy('vehicle_bookings.start_at', 'DESC');
+        return $this->response->setJSON([
+            'data' => $model->paginate($perPage),
+            'meta' => ['page' => $model->pager->getCurrentPage(), 'per_page' => $perPage, 'total' => $model->pager->getTotal()],
+        ]);
     }
 
     public function export()
@@ -26,8 +31,10 @@ class ReportController extends BaseController
 
     private function query()
     {
-        $model = (new \App\Models\BookingModel())->select('vehicle_bookings.*, vehicles.license_plate, drivers.name AS driver_name')->join('vehicles', 'vehicles.id = vehicle_bookings.vehicle_id')->join('drivers', 'drivers.id = vehicle_bookings.driver_id');
+        $model = (new \App\Models\BookingModel())->select('vehicle_bookings.*, vehicles.license_plate, vehicles.vehicle_type, vehicles.category AS vehicle_category, drivers.name AS driver_name, regions.name AS region_name')->join('vehicles', 'vehicles.id = vehicle_bookings.vehicle_id')->join('drivers', 'drivers.id = vehicle_bookings.driver_id')->join('regions', 'regions.id = vehicle_bookings.region_id');
         foreach (['status', 'region_id', 'vehicle_id'] as $filter) if ($value = $this->request->getGet($filter)) $model->where('vehicle_bookings.'.$filter, $value);
+        if ($category = $this->request->getGet('vehicle_category')) $model->where('vehicles.category', $category);
+        if ($search = trim((string) $this->request->getGet('search'))) $model->groupStart()->like('vehicle_bookings.booking_number', $search)->orLike('vehicle_bookings.requester_name', $search)->orLike('vehicle_bookings.destination', $search)->orLike('vehicles.license_plate', $search)->groupEnd();
         if ($from = $this->request->getGet('from')) $model->where('vehicle_bookings.start_at >=', $from.' 00:00:00');
         if ($to = $this->request->getGet('to')) $model->where('vehicle_bookings.start_at <=', $to.' 23:59:59');
         return $model;

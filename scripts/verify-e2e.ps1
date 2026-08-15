@@ -19,6 +19,10 @@ $suffix = Get-Random -Minimum 10000 -Maximum 99999
 $bookingPayload = @{ requester_name = "E2E Requester $suffix"; requester_nik = "NIK$suffix"; department = 'QA'; region_id = $region.id; vehicle_id = $vehicle.id; driver_id = $driver.id; purpose = 'End-to-end verification'; destination = 'Jakarta Office'; start_at = '2026-12-20 09:00:00'; end_at = '2026-12-20 17:00:00'; passenger_count = 2; requested_vehicle_category = 'PASSENGER'; approver_level_1_id = $l1.id; approver_level_2_id = $l2.id; notes = 'Automated E2E verification' } | ConvertTo-Json -Compress
 $booking = (Invoke-RestMethod -Uri "$base/bookings" -Method Post -Headers $headers -ContentType 'application/json' -Body $bookingPayload).data
 if ($booking.status -ne 'PENDING_LEVEL_1') { throw 'Booking did not enter PENDING_LEVEL_1.' }
+$updatedPayload = $bookingPayload | ConvertFrom-Json
+$updatedPayload.destination = 'Jakarta QA Office'
+$booking = (Invoke-RestMethod -Uri "$base/bookings/$($booking.id)" -Method Put -Headers $headers -ContentType 'application/json' -Body ($updatedPayload | ConvertTo-Json -Compress)).data
+if ($booking.destination -ne 'Jakarta QA Office' -or $booking.status -ne 'PENDING_LEVEL_1') { throw 'Booking update did not save or restart Level 1 approval.' }
 try {
   Invoke-RestMethod -Uri "$base/bookings" -Method Post -Headers $headers -ContentType 'application/json' -Body $bookingPayload | Out-Null
   throw 'Overlapping booking was unexpectedly accepted.'
