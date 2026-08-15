@@ -1,0 +1,34 @@
+services:
+  database:
+    image: mariadb:10.11
+    environment:
+      MARIADB_DATABASE: ${DB_DATABASE:-vehicle_booking}
+      MARIADB_USER: ${DB_USERNAME:-vehicle}
+      MARIADB_PASSWORD: ${DB_PASSWORD:-change-me}
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-change-root-password}
+    volumes: [database_data:/var/lib/mysql]
+    healthcheck:
+      test: [CMD, healthcheck.sh, --connect, --innodb_initialized]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+  backend:
+    build: ./backend-ci4
+    environment:
+      CI_ENVIRONMENT: production
+      app.baseURL: ${APP_BASE_URL:-http://localhost}
+      DB_HOST: database
+      DB_DATABASE: ${DB_DATABASE:-vehicle_booking}
+      DB_USERNAME: ${DB_USERNAME:-vehicle}
+      DB_PASSWORD: ${DB_PASSWORD:-change-me}
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env.production}
+      JWT_TTL: ${JWT_TTL:-3600}
+      CORS_ALLOWED_ORIGIN: ${CORS_ALLOWED_ORIGIN:-http://localhost}
+    depends_on:
+      database: { condition: service_healthy }
+  frontend:
+    build: ./frontend-react
+    ports: ["${APP_PORT:-8088}:80"]
+    depends_on: [backend]
+volumes:
+  database_data:
