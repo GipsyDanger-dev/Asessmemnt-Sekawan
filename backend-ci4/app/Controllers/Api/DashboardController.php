@@ -22,7 +22,12 @@ class DashboardController extends BaseController
         $this->applyBookingFilters($inUse);
         $attention = $db->table('vehicle_bookings')->select('vehicle_bookings.id, vehicle_bookings.booking_number, vehicle_bookings.destination, vehicle_bookings.start_at, vehicle_bookings.status, vehicles.license_plate')->join('vehicles', 'vehicles.id = vehicle_bookings.vehicle_id')->whereIn('vehicle_bookings.status', ['PENDING_LEVEL_1', 'PENDING_LEVEL_2', 'APPROVED'])->where('vehicle_bookings.start_at <=', date('Y-m-d H:i:s', strtotime('+7 days')));
         $this->applyBookingFilters($attention);
-        return $this->response->setJSON(['data' => ['total' => array_sum($counts), 'statuses' => $counts, 'vehicles_available' => $available->countAllResults(), 'vehicles_in_use' => $inUse->countAllResults(), 'attention' => $attention->orderBy('vehicle_bookings.start_at')->limit(5)->get()->getResultArray()]]);
+        $fuel = $db->table('fuel_logs')->selectSum('total_cost', 'total_cost')->where('logged_at >=', $from.' 00:00:00')->where('logged_at <=', $to.' 23:59:59');
+        $servicesDue = $db->table('vehicle_services')->where('status', 'SCHEDULED')->where('scheduled_at <=', date('Y-m-d', strtotime('+14 days')));
+        if ($regionId = $this->request->getGet('region_id')) { $fuel->join('vehicles', 'vehicles.id = fuel_logs.vehicle_id')->where('vehicles.region_id', (int) $regionId); $servicesDue->join('vehicles', 'vehicles.id = vehicle_services.vehicle_id')->where('vehicles.region_id', (int) $regionId); }
+        if ($vehicleType = $this->request->getGet('vehicle_type')) { if (! $this->request->getGet('region_id')) { $fuel->join('vehicles', 'vehicles.id = fuel_logs.vehicle_id'); $servicesDue->join('vehicles', 'vehicles.id = vehicle_services.vehicle_id'); } $fuel->where('vehicles.vehicle_type', $vehicleType); $servicesDue->where('vehicles.vehicle_type', $vehicleType); }
+        $fuelCost = (float) (($fuel->get()->getRowArray()['total_cost'] ?? 0));
+        return $this->response->setJSON(['data' => ['total' => array_sum($counts), 'statuses' => $counts, 'vehicles_available' => $available->countAllResults(), 'vehicles_in_use' => $inUse->countAllResults(), 'fleet' => ['fuel_cost' => $fuelCost, 'services_due' => $servicesDue->countAllResults()], 'attention' => $attention->orderBy('vehicle_bookings.start_at')->limit(5)->get()->getResultArray()]]);
     }
 
     public function bookingTrend()

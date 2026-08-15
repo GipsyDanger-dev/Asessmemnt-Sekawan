@@ -12,6 +12,10 @@ erDiagram
   vehicle_bookings ||--o{ booking_approvals : requires
   users ||--o{ booking_approvals : decides
   vehicle_bookings ||--o| vehicle_usage_logs : records
+  vehicles ||--o{ fuel_logs : consumes
+  vehicles ||--o{ vehicle_services : maintains
+  users ||--o{ fuel_logs : records
+  users ||--o{ vehicle_services : schedules
   users ||--o{ activity_logs : performs
 ```
 
@@ -25,4 +29,6 @@ erDiagram
 | `vehicle_bookings` | Travel request and lifecycle | unique booking number; indexed vehicle/driver time range |
 | `booking_approvals` | Generic sequential decisions | unique `(booking_id, approval_level)` |
 | `vehicle_usage_logs` | Completed vehicle usage | one record per booking |
+| `fuel_logs` | Fuel consumption monitoring | vehicle/date index; liters, odometer, and calculated total cost |
+| `vehicle_services` | Service schedule and history | vehicle/date index; scheduled/completed lifecycle |
 | `activity_logs` | Append-only audit trail | indexed module/entity pair |

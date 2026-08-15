@@ -54,6 +54,10 @@ php spark db:seed BookingDemoSeeder
 
 Dokumen deliverable: [PDM](docs/PDM.md), [activity diagram](docs/activity-diagram.md), dan [screenshot login](docs/screenshots/login.png).
 
+## Nilai tambah monitoring armada
+
+Admin dapat membuka **Fleet monitoring** untuk melihat riwayat pemakaian kendaraan, mencatat konsumsi BBM beserta odometer/biaya, serta membuat dan menyelesaikan jadwal service. Semua proses tersebut masuk ke Activity Log dan ringkasannya tampil di dashboard.
+
 ## Deployment manual
 
 Gunakan panduan [DEPLOYMENT.md](DEPLOYMENT.md) untuk deploy dengan PHP, Apache/Nginx, Node.js, dan MySQL/MariaDB langsung. Tidak menggunakan Docker.
