@@ -1,0 +1,5 @@
+import { useQuery } from '@tanstack/react-query'
+import { api } from '../../lib/api'
+
+type Log = { id: number; user_name: string | null; action: string; module: string; description: string; created_at: string }
+export function ActivityLogPage() { const logs = useQuery({ queryKey: ['activity-logs'], queryFn: async () => (await api.get<{ data: Log[] }>('/activity-logs')).data.data }); return <section className="booking-page"><header><div><p className="kicker">AUDIT TRAIL</p><h1>Activity log.</h1><p>Jejak tindakan penting pada aplikasi.</p></div></header><section className="table-card"><table><thead><tr><th>Waktu</th><th>User</th><th>Aksi</th><th>Modul</th><th>Deskripsi</th></tr></thead><tbody>{logs.isLoading ? <tr><td colSpan={5}>Memuat log...</td></tr> : logs.data?.map((log) => <tr key={log.id}><td>{new Date(log.created_at).toLocaleString('id-ID')}</td><td>{log.user_name ?? 'System'}</td><td>{log.action}</td><td>{log.module}</td><td>{log.description}</td></tr>)}</tbody></table></section></section> }
