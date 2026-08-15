@@ -52,7 +52,7 @@ php spark migrate --all
 php spark db:seed BookingDemoSeeder
 ```
 
-Dokumen deliverable: [PDM](docs/PDM.md), [activity diagram](docs/activity-diagram.md), dan [screenshot login](docs/screenshots/login.png).
+Dokumen deliverable: [PDM](docs/PDM.md), [activity diagram](docs/activity-diagram.md), dan [screenshot desain login](docs/screenshots/login-v2.png).
 
 ## Nilai tambah monitoring armada
 
