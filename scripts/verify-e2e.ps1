@@ -21,6 +21,14 @@ $reportFile = Join-Path $env:TEMP "vehicle-booking-report-$PID.xlsx"
 Invoke-WebRequest -Uri "$base/reports/bookings/export?region_id=$($region.id)&from=2026-12-01&to=2026-12-31" -Headers $headers -OutFile $reportFile
 if ((Get-Item $reportFile).Length -lt 100) { throw 'Excel report export is unexpectedly empty.' }
 Remove-Item -LiteralPath $reportFile
+$fuelPayload = @{ vehicle_id = $vehicle.id; logged_at = '2026-12-01 08:00:00'; odometer_km = 12500; liters = 45.5; price_per_liter = 10000; station_name = 'E2E Fuel Station'; notes = 'Automated fuel log' } | ConvertTo-Json -Compress
+$fuel = (Invoke-RestMethod -Uri "$base/fleet/fuel-logs" -Method Post -Headers $headers -ContentType 'application/json' -Body $fuelPayload).data
+if ([decimal]$fuel.total_cost -ne 455000) { throw 'Fuel log total cost is incorrect.' }
+$servicePayload = @{ vehicle_id = $vehicle.id; scheduled_at = '2026-12-05'; service_type = 'Periodic service'; odometer_km = 12600; vendor_name = 'E2E Workshop'; cost = 750000; notes = 'Automated service schedule' } | ConvertTo-Json -Compress
+$service = (Invoke-RestMethod -Uri "$base/fleet/services" -Method Post -Headers $headers -ContentType 'application/json' -Body $servicePayload).data
+if ($service.status -ne 'SCHEDULED') { throw 'Service was not scheduled.' }
+$service = (Invoke-RestMethod -Uri "$base/fleet/services/$($service.id)/complete" -Method Post -Headers $headers).data
+if ($service.status -ne 'COMPLETED') { throw 'Service was not completed.' }
 $suffix = Get-Random -Minimum 10000 -Maximum 99999
 $bookingPayload = @{ requester_name = "E2E Requester $suffix"; requester_nik = "NIK$suffix"; department = 'QA'; region_id = $region.id; vehicle_id = $vehicle.id; driver_id = $driver.id; purpose = 'End-to-end verification'; destination = 'Jakarta Office'; start_at = '2026-12-20 09:00:00'; end_at = '2026-12-20 17:00:00'; passenger_count = 2; requested_vehicle_category = 'PASSENGER'; approver_level_1_id = $l1.id; approver_level_2_id = $l2.id; notes = 'Automated E2E verification' } | ConvertTo-Json -Compress
 $booking = (Invoke-RestMethod -Uri "$base/bookings" -Method Post -Headers $headers -ContentType 'application/json' -Body $bookingPayload).data
