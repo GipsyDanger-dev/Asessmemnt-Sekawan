@@ -1,13 +1,14 @@
-import { type FormEvent, type ReactNode, useState } from 'react'
+import { lazy, Suspense, type FormEvent, type ReactNode, useState } from 'react'
 import { NavLink, Navigate, Route, Routes, useNavigate } from 'react-router-dom'
 import { useAuth } from './features/auth/AuthContext'
 import { BookingPage } from './features/bookings/BookingPage'
 import { ApprovalPage } from './features/approvals/ApprovalPage'
-import { DashboardPage } from './features/dashboard/DashboardPage'
-import { ReportsPage } from './features/reports/ReportsPage'
-import { ActivityLogPage } from './features/logs/ActivityLogPage'
-import { MasterDataPage } from './features/master/MasterDataPage'
 import './App.css'
+
+const DashboardPage = lazy(() => import('./features/dashboard/DashboardPage').then((module) => ({ default: module.DashboardPage })))
+const ReportsPage = lazy(() => import('./features/reports/ReportsPage').then((module) => ({ default: module.ReportsPage })))
+const ActivityLogPage = lazy(() => import('./features/logs/ActivityLogPage').then((module) => ({ default: module.ActivityLogPage })))
+const MasterDataPage = lazy(() => import('./features/master/MasterDataPage').then((module) => ({ default: module.MasterDataPage })))
 
 function LoginPage() {
   const { user, login } = useAuth(); const navigate = useNavigate()
@@ -22,6 +23,6 @@ export function AppShell({ children }: { children: ReactNode }) {
   return <main className="workspace"><aside className="sidebar"><div className="brand"><span className="brand-mark">V</span><span>VEHICLE OPS</span></div><div className="user-card"><span className="avatar">{user.name.slice(0, 1)}</span><div><b>{user.name}</b><small>{user.role === 'admin' ? 'Admin Pool' : 'Approver'}</small></div></div><nav><p>WORKSPACE</p><NavLink to="/dashboard">Overview</NavLink>{user.role === 'admin' ? <><NavLink to="/bookings">Booking</NavLink><NavLink to="/vehicles">Kendaraan</NavLink><NavLink to="/drivers">Driver</NavLink><NavLink to="/regions">Region</NavLink><NavLink to="/users">User & Approver</NavLink></> : <NavLink to="/approvals">Approval inbox</NavLink>}<p className="nav-space">INSIGHTS</p>{user.role === 'admin' && <><NavLink to="/reports">Laporan</NavLink><NavLink to="/activity-logs">Activity log</NavLink></>}</nav><button className="signout" onClick={() => { logout(); navigate('/login') }}>Keluar workspace</button></aside><section className="main-content">{children}</section></main>
 }
 
-function Dashboard() { return <AppShell><DashboardPage /></AppShell> }
+function Dashboard() { return <AppShell><Suspense fallback={<p>Memuat dashboard...</p>}><DashboardPage /></Suspense></AppShell> }
 
-export default function App() { return <Routes><Route path="/login" element={<LoginPage />} /><Route path="/dashboard" element={<Dashboard />} /><Route path="/bookings" element={<AppShell><BookingPage /></AppShell>} /><Route path="/approvals" element={<AppShell><ApprovalPage /></AppShell>} /><Route path="/reports" element={<AppShell><ReportsPage /></AppShell>} /><Route path="/activity-logs" element={<AppShell><ActivityLogPage /></AppShell>} /><Route path="/vehicles" element={<AppShell><MasterDataPage resource="vehicles" /></AppShell>} /><Route path="/drivers" element={<AppShell><MasterDataPage resource="drivers" /></AppShell>} /><Route path="/regions" element={<AppShell><MasterDataPage resource="regions" /></AppShell>} /><Route path="/users" element={<AppShell><MasterDataPage resource="users" /></AppShell>} /><Route path="*" element={<Navigate to="/dashboard" replace />} /></Routes> }
+export default function App() { const lazyPage = (page: ReactNode) => <AppShell><Suspense fallback={<p>Memuat halaman...</p>}>{page}</Suspense></AppShell>; return <Routes><Route path="/login" element={<LoginPage />} /><Route path="/dashboard" element={<Dashboard />} /><Route path="/bookings" element={<AppShell><BookingPage /></AppShell>} /><Route path="/approvals" element={<AppShell><ApprovalPage /></AppShell>} /><Route path="/reports" element={lazyPage(<ReportsPage />)} /><Route path="/activity-logs" element={lazyPage(<ActivityLogPage />)} /><Route path="/vehicles" element={lazyPage(<MasterDataPage resource="vehicles" />)} /><Route path="/drivers" element={lazyPage(<MasterDataPage resource="drivers" />)} /><Route path="/regions" element={lazyPage(<MasterDataPage resource="regions" />)} /><Route path="/users" element={lazyPage(<MasterDataPage resource="users" />)} /><Route path="*" element={<Navigate to="/dashboard" replace />} /></Routes> }

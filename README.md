@@ -53,3 +53,13 @@ php spark db:seed BookingDemoSeeder
 ```
 
 Dokumen deliverable: [PDM](docs/PDM.md) dan [activity diagram](docs/activity-diagram.md).
+
+## Deployment dengan Docker
+
+```powershell
+Copy-Item .env.production.example .env.production
+# Isi password database dan JWT_SECRET yang panjang serta acak.
+docker compose --env-file .env.production up --build -d
+```
+
+Frontend tersedia pada `http://localhost:8088` secara default. Container backend menjalankan migration otomatis saat mulai. Jangan memakai nilai contoh pada `.env.production` untuk lingkungan publik.
