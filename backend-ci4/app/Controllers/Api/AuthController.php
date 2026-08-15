@@ -30,8 +30,11 @@ class AuthController extends BaseController
             ->first();
 
         if ($user === null || ! $user['is_active'] || ! password_verify($input['password'], $user['password_hash'])) {
+            service('activityLog')->record(null, 'LOGIN_FAILED', 'auth', null, 'Failed login attempt for '.$input['email'].'.', $this->request->getIPAddress());
             return $this->response->setStatusCode(401)->setJSON(['message' => 'Invalid email or password.']);
         }
+
+        service('activityLog')->record((int) $user['id'], 'LOGIN_SUCCEEDED', 'auth', (int) $user['id'], 'User signed in.', $this->request->getIPAddress());
 
         return $this->response->setJSON([
             'token' => service('jwtService')->issue($user),

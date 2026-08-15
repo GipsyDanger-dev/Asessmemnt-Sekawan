@@ -21,12 +21,17 @@ class ReportController extends BaseController
     public function export()
     {
         $rows = $this->query()->orderBy('vehicle_bookings.start_at', 'DESC')->findAll();
+        $user = service('jwtService')->authenticatedUser();
+        service('activityLog')->record((int) $user['sub'], 'REPORT_EXPORTED', 'report', null, 'Exported '.$this->formatFilters().' ('.count($rows).' rows).', $this->request->getIPAddress());
         $sheet = (new Spreadsheet())->getActiveSheet();
         $sheet->fromArray(['Booking Number', 'Requester', 'Department', 'Destination', 'Vehicle', 'Driver', 'Start', 'End', 'Status'], null, 'A1');
         foreach ($rows as $index => $row) $sheet->fromArray([$row['booking_number'], $row['requester_name'], $row['department'], $row['destination'], $row['license_plate'], $row['driver_name'], $row['start_at'], $row['end_at'], $row['status']], null, 'A'.($index + 2));
         foreach (range('A', 'I') as $column) $sheet->getColumnDimension($column)->setAutoSize(true);
         $filename = 'vehicle-booking-report-'.($this->request->getGet('from') ?: date('Ymd')).'-'.($this->request->getGet('to') ?: date('Ymd')).'.xlsx';
-        return $this->response->download($filename, null)->setFileName($filename)->setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')->setBody((function () use ($sheet) { ob_start(); (new Xlsx($sheet->getParent()))->save('php://output'); return ob_get_clean(); })());
+        ob_start();
+        (new Xlsx($sheet->getParent()))->save('php://output');
+        $content = ob_get_clean();
+        return $this->response->download($filename, $content)->setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     }
 
     private function query()
@@ -38,5 +43,12 @@ class ReportController extends BaseController
         if ($from = $this->request->getGet('from')) $model->where('vehicle_bookings.start_at >=', $from.' 00:00:00');
         if ($to = $this->request->getGet('to')) $model->where('vehicle_bookings.start_at <=', $to.' 23:59:59');
         return $model;
+    }
+
+    private function formatFilters(): string
+    {
+        $active = [];
+        foreach (['status', 'region_id', 'vehicle_id', 'vehicle_category', 'from', 'to', 'search'] as $filter) if ($value = $this->request->getGet($filter)) $active[] = $filter.'='.$value;
+        return $active === [] ? 'all bookings' : implode(', ', $active);
     }
 }

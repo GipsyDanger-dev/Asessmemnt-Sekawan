@@ -17,6 +17,10 @@ $l1 = $approvers | Where-Object approval_level -eq 1 | Select-Object -First 1
 $l2 = $approvers | Where-Object approval_level -eq 2 | Select-Object -First 1
 $dashboard = (Invoke-RestMethod -Uri "$base/dashboard/summary?from=2026-12-01&to=2026-12-31&region_id=$($region.id)&vehicle_type=$($vehicle.vehicle_type)" -Headers $headers).data
 if ($null -eq $dashboard.statuses -or $null -eq $dashboard.attention) { throw 'Dashboard filtered summary is incomplete.' }
+$reportFile = Join-Path $env:TEMP "vehicle-booking-report-$PID.xlsx"
+Invoke-WebRequest -Uri "$base/reports/bookings/export?region_id=$($region.id)&from=2026-12-01&to=2026-12-31" -Headers $headers -OutFile $reportFile
+if ((Get-Item $reportFile).Length -lt 100) { throw 'Excel report export is unexpectedly empty.' }
+Remove-Item -LiteralPath $reportFile
 $suffix = Get-Random -Minimum 10000 -Maximum 99999
 $bookingPayload = @{ requester_name = "E2E Requester $suffix"; requester_nik = "NIK$suffix"; department = 'QA'; region_id = $region.id; vehicle_id = $vehicle.id; driver_id = $driver.id; purpose = 'End-to-end verification'; destination = 'Jakarta Office'; start_at = '2026-12-20 09:00:00'; end_at = '2026-12-20 17:00:00'; passenger_count = 2; requested_vehicle_category = 'PASSENGER'; approver_level_1_id = $l1.id; approver_level_2_id = $l2.id; notes = 'Automated E2E verification' } | ConvertTo-Json -Compress
 $booking = (Invoke-RestMethod -Uri "$base/bookings" -Method Post -Headers $headers -ContentType 'application/json' -Body $bookingPayload).data
