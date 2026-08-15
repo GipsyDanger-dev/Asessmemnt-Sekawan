@@ -1,0 +1,23 @@
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Dependencies and build artifacts
+node_modules/
+vendor/
+dist/
+build/
+
+# Framework/runtime artifacts
+writable/cache/
+writable/logs/
+writable/session/
+frontend-react/.vite/
+
+# Local tooling
+.idea/
+.vscode/
+*.log
+.DS_Store
+Thumbs.db
