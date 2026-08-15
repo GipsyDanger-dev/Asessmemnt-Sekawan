@@ -27,7 +27,7 @@ export function DashboardPage() {
   return <section className="dashboard-page">
     <header className="dashboard-hero">
       <div><p className="kicker">OPERATIONS OVERVIEW</p><h1>Ringkasan operasional</h1><p>Prioritas booking, ketersediaan armada, dan kebutuhan service dalam satu tampilan.</p></div>
-      <NavLink className="primary-link" to="/bookings">Buat pemesanan</NavLink>
+      <NavLink className="primary-link" to="/bookings" state={{ openForm: true }}>Buat pemesanan</NavLink>
     </header>
     <details className="dashboard-filters"><summary>Filter periode dan armada</summary><div className="filter-strip">
       <label>Periode mulai<input type="date" value={filters.from} onChange={(event) => change('from', event.target.value)} /></label>
