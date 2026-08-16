@@ -38,11 +38,11 @@ Detail fitur dan alur bisnis tersedia pada [PRD.md](PRD.md).
 
 ## Akun Demo
 
-| Role | Email | Password |
-|---|---|---|
-| Admin Pool | `admin@vehicle.test` | `Password123!` |
-| Approver Level 1 | `manager@vehicle.test` | `Password123!` |
-| Approver Level 2 | `director@vehicle.test` | `Password123!` |
+| Nama akun | Role | Email | Password |
+|---|---|---|---|
+| Admin Pool | Admin Pool | `admin@vehicle.test` | `Password123!` |
+| Manager Vehicle | Approver Level 1 | `manager@vehicle.test` | `Password123!` |
+| Director Vehicle | Approver Level 2 | `director@vehicle.test` | `Password123!` |
 
 ## Database dan Seeder
 
