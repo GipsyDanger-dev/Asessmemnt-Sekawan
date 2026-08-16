@@ -7,6 +7,7 @@ use App\Models\BookingModel;
 use App\Models\DriverModel;
 use App\Models\UserModel;
 use App\Models\VehicleModel;
+use App\Exceptions\ConflictException;
 use App\Models\VehicleUsageLogModel;
 use DomainException;
 
@@ -31,7 +32,7 @@ class BookingWorkflowService
         $bookingModel = new BookingModel();
         if ($this->hasConflict($bookingModel, 'vehicle_id', (int) $vehicle['id'], $input['start_at'], $input['end_at'])
             || $this->hasConflict($bookingModel, 'driver_id', (int) $driver['id'], $input['start_at'], $input['end_at'])) {
-            throw new DomainException('Vehicle or driver already has an overlapping booking.');
+            throw new ConflictException('Vehicle or driver already has an overlapping booking.');
         }
 
         $levelOne = $this->approver((int) $input['approver_level_1_id'], 1);
@@ -117,7 +118,7 @@ class BookingWorkflowService
         }
         if ($this->hasConflict($bookingModel, 'vehicle_id', (int) $vehicle['id'], $input['start_at'], $input['end_at'], $bookingId)
             || $this->hasConflict($bookingModel, 'driver_id', (int) $driver['id'], $input['start_at'], $input['end_at'], $bookingId)) {
-            throw new DomainException('Vehicle or driver already has an overlapping booking.');
+            throw new ConflictException('Vehicle or driver already has an overlapping booking.');
         }
         $levelOne = $this->approver((int) $input['approver_level_1_id'], 1);
         $levelTwo = $this->approver((int) $input['approver_level_2_id'], 2);

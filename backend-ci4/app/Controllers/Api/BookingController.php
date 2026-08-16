@@ -3,6 +3,7 @@
 namespace App\Controllers\Api;
 
 use App\Controllers\BaseController;
+use App\Exceptions\ConflictException;
 use DomainException;
 
 class BookingController extends BaseController
@@ -23,6 +24,8 @@ class BookingController extends BaseController
         try {
             $user = service('jwtService')->authenticatedUser();
             return $this->response->setJSON(['data' => service('bookingWorkflow')->update($id, $this->validator->getValidated(), (int) $user['sub'], $this->request->getIPAddress())]);
+        } catch (ConflictException $exception) {
+            return $this->response->setStatusCode(409)->setJSON(['message' => $exception->getMessage()]);
         } catch (DomainException $exception) {
             return $this->response->setStatusCode(422)->setJSON(['message' => $exception->getMessage()]);
         }
@@ -100,6 +103,8 @@ class BookingController extends BaseController
             $user = service('jwtService')->authenticatedUser();
             $booking = service('bookingWorkflow')->create($this->validator->getValidated(), (int) $user['sub'], $this->request->getIPAddress());
             return $this->response->setStatusCode(201)->setJSON(['data' => $booking]);
+        } catch (ConflictException $exception) {
+            return $this->response->setStatusCode(409)->setJSON(['message' => $exception->getMessage()]);
         } catch (DomainException $exception) {
             return $this->response->setStatusCode(422)->setJSON(['message' => $exception->getMessage()]);
         }
