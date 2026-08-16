@@ -1,32 +1,63 @@
 # Vehicle Booking & Approval System
 
-Monorepo untuk assessment aplikasi pemesanan kendaraan operasional dengan approval dua level.
+Aplikasi ini dibuat untuk technical assessment Fullstack Developer. Fungsinya adalah membantu pool kendaraan mencatat pemesanan kendaraan, menentukan driver, dan menjalankan persetujuan berjenjang sampai dua level.
 
-## Struktur
+Selain booking dan approval, aplikasi juga menyediakan dashboard pemakaian kendaraan, laporan yang dapat diekspor ke Excel, activity log, serta monitoring BBM dan jadwal service.
 
-- `backend-ci4/` — REST API CodeIgniter 4, MySQL, JWT.
-- `frontend-react/` — React, TypeScript, dan Vite.
-- `PRD.md` — kebutuhan produk dan acceptance criteria.
+## Teknologi yang digunakan
 
-## Prasyarat Lokal
+- Backend: CodeIgniter 4
+- Frontend: React + TypeScript + Vite
+- Database: MySQL 8
+- PHP: 8.2 atau lebih baru
+- Autentikasi: JWT
 
-- PHP 8.2+ dengan ekstensi `intl` dan `zip`.
-- Composer 2.
-- MySQL 8.
-- Node.js 20+ dan npm.
+## Akun demo
 
-## Menjalankan Backend
+Semua akun demo menggunakan password yang sama: `Password123!`
+
+| Nama akun | Peran | Email |
+|---|---|---|
+| Admin Pool | Membuat dan mengelola booking | `admin@vehicle.test` |
+| Manager Vehicle | Approver Level 1 | `manager@vehicle.test` |
+| Director Vehicle | Approver Level 2 | `director@vehicle.test` |
+
+Alur yang disarankan untuk mencoba aplikasi:
+
+1. Login sebagai **Admin Pool** dan buat pemesanan kendaraan.
+2. Login sebagai **Manager Vehicle** untuk menyetujui Level 1.
+3. Login sebagai **Director Vehicle** untuk menyetujui Level 2.
+4. Kembali ke akun admin untuk melihat perubahan status, laporan, dan activity log.
+
+## Menjalankan aplikasi secara lokal
+
+### 1. Siapkan database
+
+Buat database MySQL bernama `vehicle_booking`, atau import file `vehicle_booking.sql` jika file dump database disertakan bersama ZIP.
+
+Kemudian salin konfigurasi environment:
 
 ```powershell
 Copy-Item backend-ci4/.env.example backend-ci4/.env
+```
+
+Sesuaikan bagian database dan `JWT_SECRET` di file `backend-ci4/.env`.
+
+### 2. Jalankan backend
+
+```powershell
 cd backend-ci4
 composer install
+php spark migrate --all
+php spark db:seed BookingDemoSeeder
 php spark serve
 ```
 
-Atur kredensial MySQL dan `JWT_SECRET` di `backend-ci4/.env` sebelum menjalankan migration.
+Backend akan tersedia di `http://localhost:8080`.
 
-## Menjalankan Frontend
+### 3. Jalankan frontend
+
+Buka terminal baru:
 
 ```powershell
 cd frontend-react
@@ -34,30 +65,23 @@ npm install
 npm run dev
 ```
 
-Detail fitur dan alur bisnis tersedia pada [PRD.md](PRD.md).
+Frontend biasanya tersedia di `http://localhost:5173`.
 
-## Akun Demo
+## Fitur utama
 
-| Nama akun | Role | Email | Password |
-|---|---|---|---|
-| Admin Pool | Admin Pool | `admin@vehicle.test` | `Password123!` |
-| Manager Vehicle | Approver Level 1 | `manager@vehicle.test` | `Password123!` |
-| Director Vehicle | Approver Level 2 | `director@vehicle.test` | `Password123!` |
+- Admin membuat booking, memilih kendaraan, driver, serta approver Level 1 dan Level 2.
+- Approval dilakukan berjenjang melalui akun approver.
+- Dashboard menampilkan ringkasan booking dan pemakaian kendaraan.
+- Laporan booking dapat difilter dan diekspor ke Excel.
+- Fleet Monitoring mencatat riwayat pemakaian, konsumsi BBM, serta jadwal service kendaraan.
+- Activity Log menyimpan proses penting dalam aplikasi.
+- Hak akses dipisahkan: admin mengelola operasional, approver hanya melakukan persetujuan.
 
-## Database dan Seeder
+## Dokumen pendukung
 
-```powershell
-cd backend-ci4
-php spark migrate --all
-php spark db:seed BookingDemoSeeder
-```
+- [PRD](PRD.md)
+- [Physical Data Model](docs/PDM.md)
+- [Activity Diagram](docs/activity-diagram.md)
+- [Panduan deployment manual](DEPLOYMENT.md)
 
-Dokumen deliverable: [PDM](docs/PDM.md), [activity diagram](docs/activity-diagram.md), dan [screenshot desain login](docs/screenshots/login-v2.png).
-
-## Nilai tambah monitoring armada
-
-Admin dapat membuka **Fleet monitoring** untuk melihat riwayat pemakaian kendaraan, mencatat konsumsi BBM beserta odometer/biaya, serta membuat dan menyelesaikan jadwal service. Semua proses tersebut masuk ke Activity Log dan ringkasannya tampil di dashboard.
-
-## Deployment manual
-
-Gunakan panduan [DEPLOYMENT.md](DEPLOYMENT.md) untuk deploy dengan PHP, Apache/Nginx, Node.js, dan MySQL/MariaDB langsung. Tidak menggunakan Docker.
+Project ini tidak menggunakan Docker. Semua layanan dijalankan langsung menggunakan PHP, Node.js, dan MySQL.
